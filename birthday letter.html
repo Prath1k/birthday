@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday!</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Patrick+Hand&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Styles & Animations */
+        :root {
+            --primary: #FF6B6B;
+            --secondary: #4ECDC4;
+            --yellow: #FFE66D;
+            --dark: #2C3E50;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            overflow-x: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+        }
+
+        h1, h2 {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        p {
+            font-family: 'Patrick Hand', cursive;
+            font-size: 1.2rem;
+        }
+
+        .card-container {
+            width: 100%;
+            max-width: 500px;
+            height: 600px; /* Fixed height for consistency */
+            position: relative;
+            perspective: 1000px;
+        }
+
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+            backface-visibility: hidden;
+            overflow: hidden;
+            opacity: 0;
+            transform: rotateY(180deg);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .page.active {
+            opacity: 1;
+            transform: rotateY(0deg);
+            z-index: 10;
+            pointer-events: all;
+        }
+
+        .page.passed {
+            transform: rotateY(-180deg);
+            opacity: 0;
+            z-index: 0;
+        }
+
+        /* Envelope Animation */
+        .envelope-flap {
+            transition: transform 0.5s;
+        }
+        .open-btn:hover .envelope-flap {
+            transform: translateY(-10px);
+        }
+
+        /* Floating Animation */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Candle Flame Animation */
+        .flame {
+            width: 15px;
+            height: 25px;
+            background: orange;
+            border-radius: 50% 50% 20% 20%;
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px orange, 0 0 20px yellow;
+            animation: flicker 0.5s infinite alternate;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        
+        @keyframes flicker {
+            0% { transform: translateX(-50%) scale(1); opacity: 1; }
+            100% { transform: translateX(-50%) scale(1.1); opacity: 0.8; }
+        }
+
+        .flame.out {
+            opacity: 0;
+            animation: none;
+        }
+
+        .smoke {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            background: #aaa;
+            border-radius: 50%;
+            opacity: 0;
+            transform: translateX(-50%);
+        }
+
+        @keyframes smoke-rise {
+            0% { opacity: 0.8; transform: translateX(-50%) translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-30px) scale(2); }
+        }
+
+        .smoke.active {
+            animation: smoke-rise 1s forwards;
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* Buttons */
+        .btn-custom {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            font-family: 'Fredoka One', cursive;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(78, 205, 196, 0.4);
+        }
+
+        /* Decorative Elements */
+        .decoration {
+            position: absolute;
+            opacity: 0.1;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="card-container relative">
+        
+        <!-- Page 1: The Envelope -->
+        <div class="page active" id="page-1">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-400 via-yellow-400 to-blue-400 rounded-t-3xl"></div>
+            
+            <div class="floating mb-8 text-8xl">
+                💌
+            </div>
+            <h1 class="text-4xl text-gray-800 mb-4">You've got mail!</h1>
+            <p class="text-gray-500 mb-8">A special delivery for a special person.</p>
+            
+            <button class="btn-custom" onclick="nextPage(2)">Open Letter</button>
+            
+            <div class="absolute bottom-4 text-sm text-gray-400">Tap to open</div>
+        </div>
+
+        <!-- Page 2: The Heartfelt Message -->
+        <div class="page" id="page-2">
+            <div class="decoration top-10 left-10 text-6xl text-pink-500">🌸</div>
+            <div class="decoration bottom-10 right-10 text-6xl text-blue-500">✨</div>
+
+            <h2 class="text-3xl text-pink-500 mb-6">Happy Birthday! ra siddu🥳 🎉</h2>
+            
+            <div class="bg-yellow-50 p-6 rounded-lg shadow-inner transform rotate-1 mb-6 max-w-xs">
+                <p class="text-gray-700 leading-relaxed text-lg">
+                    "congrats eppudu you are 19 years old babes "
+                </p>
+            </div>
+
+            <p class="text-sm text-gray-400 mb-8 font-sans font-bold uppercase tracking-widest">Swipe for fun →</p>
+            
+            <div class="flex gap-4">
+                <button class="text-gray-400 hover:text-gray-600" onclick="prevPage(1)">Back</button>
+                <button class="btn-custom" onclick="nextPage(3)">Let's Party!</button>
+            </div>
+        </div>
+
+        <!-- Page 3: Interactive Cake -->
+        <div class="page" id="page-3">
+            <h2 class="text-3xl text-purple-600 mb-2">Make a Wish! 🎂</h2>
+            <p class="text-gray-500 mb-8 text-sm">Tap the flames to blow them out!</p>
+            
+            <div class="relative mt-10 mb-16">
+                <!-- Cake Body -->
+                <div class="w-48 h-32 bg-pink-300 rounded-lg relative shadow-lg mx-auto flex items-center justify-center">
+                    <div class="absolute w-full h-8 bg-white opacity-30 top-1/2 transform -translate-y-1/2"></div>
+                    <span class="text-white font-bold text-xl relative z-10">HBD!</span>
+                </div>
+                <!-- Candles -->
+                <div class="absolute -top-16 left-1/2 transform -translate-x-1/2 flex gap-6">
+                    <!-- Candle 1 -->
+                    <div class="w-4 h-16 bg-blue-400 rounded relative">
+                        <div class="flame" onclick="blowCandle(this)"></div>
+                        <div class="smoke"></div>
+                    </div>
+                    <!-- Candle 2 -->
+                    <div class="w-4 h-16 bg-green-400 rounded relative -mt-4">
+                        <div class="flame" onclick="blowCandle(this)"></div>
+                        <div class="smoke"></div>
+                    </div>
+                    <!-- Candle 3 -->
+                    <div class="w-4 h-16 bg-yellow-400 rounded relative">
+                        <div class="flame" onclick="blowCandle(this)"></div>
+                        <div class="smoke"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="wish-message" class="opacity-0 transition-opacity duration-500 text-teal-600 font-bold text-xl mb-6">
+                Yay! May your wish come true! ✨
+            </div>
+
+            <div class="flex gap-4">
+                <button class="text-gray-400 hover:text-gray-600" onclick="prevPage(2)">Back</button>
+                <button class="btn-custom" onclick="nextPage(4)">Punchlines</button>
+            </div>
+        </div>
+
+        <!-- Page 4: Punchlines -->
+        <div class="page" id="page-4">
+            <h2 class="text-3xl text-yellow-500 mb-6">Real Talk 🎤</h2>
+            
+            <div class="relative w-full h-48 mb-6">
+                <div id="joke-card" class="absolute inset-0 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center p-6 cursor-pointer transition-transform active:scale-95" onclick="nextJoke()">
+                    <p id="joke-text" class="text-xl text-gray-700 font-bold">Tap for wisdom...</p>
+                </div>
+            </div>
+
+            <p class="text-xs text-gray-400 mb-6">Tap the box for a new fact</p>
+
+            <div class="flex gap-4">
+                <button class="text-gray-400 hover:text-gray-600" onclick="prevPage(3)">Back</button>
+                <button class="btn-custom" onclick="nextPage(5)">Grand Finale</button>
+            </div>
+        </div>
+
+        <!-- Page 5: Finale -->
+        <div class="page" id="page-5">
+            <h1 class="text-5xl mb-4 floating">🎁</h1>
+            <h2 class="text-4xl text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 font-extrabold mb-4">
+                Have a Blast!
+            </h2>
+            <p class="text-gray-600 mb-8">
+                Sending you virtual hugs and a massive amount of love on your special day.
+            </p>
+            
+            <div class="flex flex-col gap-3 w-full max-w-xs">
+                <button class="btn-custom bg-gradient-to-r from-yellow-400 to-orange-500" onclick="triggerConfetti()">
+                    More Confetti! 🎉
+                </button>
+                <button class="text-gray-400 text-sm mt-2 hover:text-gray-600" onclick="nextPage(1)">
+                    Read Again ↺
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- State Management ---
+        let currentPage = 1;
+        const totalPages = 5;
+        let candlesblown = 0;
+
+        // --- Navigation ---
+        function nextPage(pageNumber) {
+            const current = document.getElementById(`page-${currentPage}`);
+            const next = document.getElementById(`page-${pageNumber}`);
+
+            if (next) {
+                // Animate out current
+                current.classList.add('passed');
+                current.classList.remove('active');
+
+                // Animate in next
+                next.classList.remove('passed');
+                next.classList.add('active');
+
+                currentPage = pageNumber;
+
+                // Special trigger for finale
+                if (currentPage === 5) {
+                    triggerConfetti();
+                }
+            }
+        }
+
+        function prevPage(pageNumber) {
+            const current = document.getElementById(`page-${currentPage}`);
+            const prev = document.getElementById(`page-${pageNumber}`);
+
+            if (prev) {
+                current.classList.remove('active');
+                // Wait slightly for z-index sort
+                setTimeout(() => {
+                    current.classList.remove('passed'); // Reset for future
+                }, 600);
+
+                prev.classList.remove('passed');
+                prev.classList.add('active');
+
+                currentPage = pageNumber;
+            }
+        }
+
+        // --- Candle Interaction ---
+        function blowCandle(element) {
+            if (element.classList.contains('out')) return;
+
+            element.classList.add('out');
+            
+            // Find sibling smoke and animate
+            const smoke = element.nextElementSibling;
+            smoke.classList.add('active');
+
+            candlesblown++;
+
+            if (candlesblown === 3) {
+                setTimeout(() => {
+                    document.getElementById('wish-message').classList.remove('opacity-0');
+                    triggerConfetti();
+                }, 500);
+            }
+        }
+
+        // --- Joke Logic ---
+        const jokes = [
+            "You're not old, you're just retro! 🕹️",
+            "Age is merely the number of years the world has been enjoying you. 🌍",
+            "I was going to make an age joke, but it was too old. 🦕",
+            "You're not getting older, you're leveling up! ⬆️",
+            "Don't worry about your age. You get a new one every year. 📅",
+            "Statistics show that those who have the most birthdays live the longest. 📈"
+        ];
+        
+        let jokeIndex = 0;
+        
+        function nextJoke() {
+            const jokeCard = document.getElementById('joke-card');
+            const jokeText = document.getElementById('joke-text');
+            
+            // Simple pop animation
+            jokeCard.style.transform = "scale(0.95)";
+            setTimeout(() => jokeCard.style.transform = "scale(1)", 100);
+
+            // Change text
+            jokeText.style.opacity = 0;
+            setTimeout(() => {
+                jokeText.innerText = jokes[jokeIndex];
+                jokeText.style.opacity = 1;
+                jokeIndex = (jokeIndex + 1) % jokes.length;
+            }, 200);
+        }
+
+        // --- Confetti Engine ---
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#FF9F43', '#A29BFE'];
+
+        function Particle(x, y) {
+            this.x = x;
+            this.y = y;
+            this.size = Math.random() * 10 + 5;
+            this.speedX = Math.random() * 6 - 3;
+            this.speedY = Math.random() * -15 - 5; // Initial upward burst
+            this.color = colors[Math.floor(Math.random() * colors.length)];
+            this.gravity = 0.5;
+            this.rotation = Math.random() * 360;
+            this.rotationSpeed = Math.random() * 10 - 5;
+        }
+
+        Particle.prototype.update = function() {
+            this.speedY += this.gravity;
+            this.x += this.speedX;
+            this.y += this.speedY;
+            this.rotation += this.rotationSpeed;
+            
+            // Air resistance
+            this.speedX *= 0.99; 
+            
+            if (this.size > 0.2) this.size -= 0.1;
+        }
+
+        Particle.prototype.draw = function() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation * Math.PI / 180);
+            ctx.fillStyle = this.color;
+            ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+            ctx.restore();
+        }
+
+        function triggerConfetti() {
+            // Burst from bottom center
+            for (let i = 0; i < 100; i++) {
+                particles.push(new Particle(canvas.width / 2, canvas.height));
+            }
+            // Burst from top corners
+            for (let i = 0; i < 50; i++) {
+                particles.push(new Particle(0, canvas.height/2));
+                particles.push(new Particle(canvas.width, canvas.height/2));
+            }
+        }
+
+        function animateConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                
+                if (particles[i].size <= 0.2 || particles[i].y > canvas.height) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+            requestAnimationFrame(animateConfetti);
+        }
+
+        // Handle Resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Start animation loop
+        animateConfetti();
+
+    </script>
+</body>
+</html>
